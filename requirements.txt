@@ -1,0 +1,9 @@
+streamlit
+ibpmodel
+pandas
+numpy
+scipy
+cdflib
+matplotlib
+torch
+scikit-learn
