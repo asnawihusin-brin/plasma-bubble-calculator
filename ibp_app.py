@@ -16,16 +16,6 @@ Aplikasi ini menghitung **probabilitas terjadinya Plasma Bubble** di ionosfer ek
 menggunakan model resmi Swarm (ESA) — mendukung **Model Klimatologis** dan **Model Machine Learning**.
 """)
 
-# ====================== FUNGSI BANTUAN FORMAT JAM ======================
-def format_jam(nilai):
-    """Mengubah angka 24-30 menjadi format jam pagi (00:00 - 06:00)"""
-    if nilai >= 24.0:
-        jam_asli = int(nilai - 24)
-        return f"{jam_asli:02d}:00 Pagi"
-    else:
-        jam_asli = int(nilai)
-        return f"{jam_asli:02d}:00 Malam"
-
 # ====================== SIDEBAR - INPUT ======================
 st.sidebar.header("⚙️ Parameter Input")
 
@@ -71,9 +61,11 @@ local_time_slider = st.sidebar.slider(
     max_value=30.0,   # 24.0 = 00:00, 30.0 = 06:00 pagi
     value=21.0,
     step=0.5,
-    format=format_jam, # Gunakan fungsi format jam yang kita buat di atas
-    help="Biasanya antara 18–06 LT (setelah sunset hingga sebelum matahari terbit)"
+    help="Geser untuk memilih waktu. Angka 24.0 berarti tengah malam (00:00)."
 )
+
+# Tambahkan teks kecil di bawah slider agar pengguna paham
+st.sidebar.caption("💡 Angka 18.0 - 23.5 = Malam hari | 24.0 - 30.0 = Pagi hari (Contoh: 25.0 = 01:00 Pagi)")
 
 # Konversi kembali ke format 0-24 jam untuk dibaca oleh model ibpmodel
 if local_time_slider >= 24.0:
