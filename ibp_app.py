@@ -16,6 +16,16 @@ Aplikasi ini menghitung **probabilitas terjadinya Plasma Bubble** di ionosfer ek
 menggunakan model resmi Swarm (ESA) — mendukung **Model Klimatologis** dan **Model Machine Learning**.
 """)
 
+# ====================== FUNGSI BANTUAN FORMAT JAM ======================
+def format_jam(nilai):
+    """Mengubah angka 24-30 menjadi format jam pagi (00:00 - 06:00)"""
+    if nilai >= 24.0:
+        jam_asli = int(nilai - 24)
+        return f"{jam_asli:02d}:00 Pagi"
+    else:
+        jam_asli = int(nilai)
+        return f"{jam_asli:02d}:00 Malam"
+
 # ====================== SIDEBAR - INPUT ======================
 st.sidebar.header("⚙️ Parameter Input")
 
@@ -54,21 +64,24 @@ longitude = st.sidebar.slider(
     step=5
 )
 
-local_time = st.sidebar.slider(
-    "Local Time (jam)",
+# --- PERBAIKAN SLIDER WAKTU LOKAL ---
+local_time_slider = st.sidebar.slider(
+    "Local Time (18:00 - 06:00)",
     min_value=18.0,
-    max_value=6.0,   # streamlit slider bisa mundur
+    max_value=30.0,   # 24.0 = 00:00, 30.0 = 06:00 pagi
     value=21.0,
-    step=0.1,
-    help="Biasanya antara 18–06 LT (setelah sunset)"
+    step=0.5,
+    format=format_jam, # Gunakan fungsi format jam yang kita buat di atas
+    help="Biasanya antara 18–06 LT (setelah sunset hingga sebelum matahari terbit)"
 )
 
-# Perbaiki jika slider mundur
-if local_time > 12:
-    local_time = local_time
+# Konversi kembali ke format 0-24 jam untuk dibaca oleh model ibpmodel
+if local_time_slider >= 24.0:
+    local_time_model = local_time_slider - 24.0
 else:
-    # Streamlit slider min>max tidak ideal, kita pakai cara lain
-    pass
+    local_time_model = local_time_slider
+
+# ------------------------------------
 
 f107 = st.sidebar.slider(
     "F10.7 Solar Flux",
@@ -85,10 +98,11 @@ hitung = st.sidebar.button("🚀 Hitung IBP", type="primary", use_container_widt
 if hitung:
     with st.spinner("Sedang menghitung..."):
         try:
+            # Panggil model menggunakan local_time_model (yang sudah dikonversi ke 0-24)
             result = ibp.calculateIBPindex(
                 day_month=day_month,
                 longitude=longitude,
-                local_time=local_time,
+                local_time=local_time_model, 
                 f107=f107,
                 elecDensity=elec_density
             )
@@ -125,6 +139,8 @@ if hitung:
             # Detail parameter
             with st.expander("Lihat detail parameter & hasil mentah"):
                 st.dataframe(result, use_container_width=True)
+                # Tambahan info waktu yang dikonversi
+                st.write(f"Waktu lokal yang diproses oleh model: **{local_time_model:.2f} jam (format 0-24)**")
 
             # Info model
             st.caption(f"Model yang digunakan: **{model_type}** | Sumber: Swarm L2 Product (IBP_CLI)")
